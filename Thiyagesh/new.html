@@ -1,0 +1,358 @@
+<link href="App/Quiz/Styles/quiz-module.css" rel="stylesheet" />
+<link href="App/Quiz/Styles/question-module.css" rel="stylesheet" />
+<script src="UITools/validationJquery/js/jquery.validate.js"></script>
+<script src="UITools/validationJquery/js/bootstrap.min.js"></script>
+<script src="UITools/validationJquery/js/tooltip-validation.js"></script>
+<script src="UITools/library/js/bootstrap-filestyle.min.js"></script>
+<style>
+    .highlightedText {
+        background: #e0efd9;
+        padding: 3px 6px;
+        border: 1px solid #aed6a1;
+    }
+</style>
+<div class="spinner" ng-show="!isReviewShow">
+    <img src="UITools/custom/images/loader8.gif" alt="pre-loader" /><span class="spinnertext">{{'Please Wait' | translate}}..... {{'Preparing your Summary for Review' | translate}}.....!</span>
+</div>
+<div class="quiz-result"  ng-show="isReviewShow">
+    
+    <div class="box-header with-border row p-l-0 p-r-0">
+        <div class="col-lg-10 col-sm-12 m-b-15">
+            <span class="panel-title">
+                <strong class="text-capitalize">             
+                   <span class="f-s-16 Subscript">{{'Review Summary' | translate}} </span>                   
+                </strong>
+            </span>
+        </div>
+        <div class="col-lg-2 col-sm-4 col-xs-12 text-right">
+            <div uib-dropdown keyboard-nav>
+                <button type="button" id="lastResults" class="btn btn_dblue btn-small m-0 dropdown-toggle f-w-700" uib-dropdown-toggle>{{'Attempts' | translate}} {{attempt}} &nbsp;<span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu" uib-dropdown-menu aria-labelledby="lastResults">
+                    <li role="menuitem" ng-repeat="att in totalatt  | unique:'attemptno'">
+                        <a href="" ng-click="getquizresult(att.attemptno,att.attemptno)" class="btn btn-small btn_green">{{'Attempts' | translate}} {{att.attemptno}}</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-12 text-right p-t-15">
+            <span class="btn btn-default btn-small" ng-class="{'active' : AccordinColor == true}" ng-click="toggle(true)" title="Expand All">
+                <i class="fa fa-plus"></i>
+
+            </span>
+            <span class="btn btn-default btn-small" ng-class="{'active' : AccordinColor == false}" ng-click="toggle(false)" title="Collapse All">
+                <i class="fa fa-minus"></i>
+            </span>
+        </div>
+    </div>
+    <div class="QuestionPane panel-body">
+        <!--Start of Question Display Section-->
+        <div class="review-ans row" ng-if="question.comprehensionquestionid==0" ng-repeat="question in QuizRespone | orderBy:'questionid'">
+            <div class="Display-Question quiz-text m-b-15 col-md-12" ng-click="question.open = !question.open">
+                <div class="ribbon badge_groups m-t-0">
+                    <span class="label text-capitalize label-yellow">  {{question.AnsweredType}} </span><!--{{question.ansTypeClass}}-->
+                </div>
+                <div class="clearfix
+                <div class="clearfix f-s-14">
+                    <span class="quiz-count pull-left" ng-if="question.questiontype != 'Comprehension'"> Q <sub>{{$index+1}}</sub> :  </span>
+                    <div ng-if="question.questiontype != 'Comprehension'">
+                        <div class="questiontext p-l-5" ng-if="question.questiontype != 'MTF' && question.questiontype != 'DAD'" ng-bind-html="question.questiontext"></div>
+                    </div>
+                    <span class="p-l-5" ng-if="question.questiontype == 'MTF'"><b>{{'Match the following' | translate}} </b>{{question.qname}}</span>
+                    <span class="p-l-5" ng-if="question.questiontype == 'DAD'"><b>{{'Drag and Drop' | translate}} - </b>{{question.qname}}</span>
+
+                    <div class="clearfix" ng-if="question.questiontype == 'Comprehension'">
+                        <span class="quiz-count pull-left"> Q <sub>{{$index+1}}</sub> : </span>
+                        <div class="pull-left p-l-5" ng-if="question.questiontext != 'image' || question.questiontext != 'video'">{{question.qname}}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12 col-xs-12 col-sm-12" ng-if="question.questiontype == 'VTQ'" ng-show="question.open">
+                <p class="">{{'Watch the video carefully and answer the questions accordingly' | translate}}</p>
+                <div class="row">
+                    <div class="col-md-offset-2 col-md-8 p-b-10">
+                        <!--don't set this below iframe Width and height, Please refer LMSWEB_Sprint2RequireJs Bug ID:3868-->
+                        <iframe src="{{vtq.VTQPath | trusted}}" ng-repeat="vtq in VTQarray" ng-if="question.questionid == vtq.questionId && isYoutube" frameborder="0" allowfullscreen></iframe>                   
+                        <div class="embed-responsive embed-responsive-16by9" ng-if="question.questionid == vtq.questionId && !isYoutube" ng-repeat="vtq in VTQarray">
+                            <video controls="controls">
+                                <source ng-src="{{vtq.VTQPath | trusted}}" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div ng-repeat="option in question.options" class="Display-Options"
+                             ng-class="{'userchoosen': question.optionchoosen==option.answerid , 'correctanswer': option.Iscorrect== 1}">
+                            <p>
+                                {{option.optiontext}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-12 col-xs-12" ng-if="question.questiontype == 'ITQ'" ng-show="question.open">
+                <p class="text-info">{{'Watch the image carefully and answer the questions accordingly' | translate}}</p>
+                <div class="row">
+                    <div class="col-md-offset-2 col-md-8 p-b-10" ng-repeat="itq in ITQarray">
+                        <img class="img-responsive" alt="{{question.questionid}}"
+                             ng-src="{{itq.ITQPath}}" ng-if="question.questionid == itq.questionId" />
+                    </div>
+                    <div class="col-md-6">
+                        <div ng-repeat="option in question.options" class="Display-Options"
+                             ng-class="{'userchoosen': question.optionchoosen==option.answerid , 'correctanswer': option.Iscorrect== 1}">
+                            <p>{{option.optiontext}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="clearfix DAD-WRAPPER" ng-if="question.questiontype == 'DADImage'" ng-show="question.open">
+                <!--Corrrect Answer-->
+                <div class="col-md-12">
+                    <h4 class="">{{'Correct Answer' | translate}}</h4>
+                    <ul class="list-inline DragList" style="height: 80px; position: relative; margin-top: -80px; margin-left: 0;">
+                        <li class="drag-items ui-draggable ui-draggable-handle draggable1 correctanswer" ng-repeat="option in question.options"
+                            style="position:absolute; width:150px; left:{{option.x_left+'px'}}; top:{{option.x_top+'px'}};">
+                            {{option.optiontext}}
+                        </li>
+                    </ul>
+
+                    <img class="DAD_Img" ng-repeat="dadimage in DADimagearray" ng-src="{{dadimage.DADimagePath}}" ng-if="question.questionid == dadimage.questionId"
+                         onerror="this.src='UITools/custom/images/images.jpg';" alt="{{questionimage}}" width="600" height="400">
+                </div>
+                <!--Attempted Answer-->
+                <div class="col-md-12" ng-if="question.optionchoosen != 0">
+                    <h4 class="">{{'Attempted Answer' | translate}}</h4>
+                    <ul class="list-inline DragList" style="height: 80px; position: relative; margin-top: -80px; margin-left: 0;">
+                        <li class="drag-items ui-draggable ui-draggable-handle draggable1" ng-repeat="val in question.answeredoption"
+                            style="position:absolute; left:{{val.xleft+'px'}}; top:{{val.xtop+'px'}};"
+                            ng-class="{'userchoosen': val.optionid!=val.answerid , 'correctanswer': val.optionid==val.answerid}">
+                            {{val.optiontxt}}
+                        </li>
+                    </ul>
+                    <img class="DAD_Img" ng-repeat="dadimage in DADimagearray" ng-src="{{dadimage.DADimagePath}}" ng-if="question.questionid == dadimage.questionId"
+                         onerror="this.src='UITools/custom/images/images.jpg';" alt="{{questionimage}}" width="600" height="400">
+                </div>
+            </div>
+
+            <!--below code for drag and drop-->
+            <div class="clearfix dad p-b-10" ng-init="entities=init(question.questiontext)" ng-if="question.questiontype == 'DAD'" ng-show="question.open">
+
+                <div class="col-md-6">
+                    <h4 class="">{{'Correct Answer' | translate}}</h4>
+                    <div ng-model="value" id="shuffle_{{question.questionid}}" ng-repeat="val in question.options"
+                         class="ui-draggable-handle Display-Options width-full correctanswer">
+                        <label class="ver-align-m {{$parent.$index+1}}">{{val.optiontext}}</label>
+                    </div>
+                </div>
+                <div class="col-md-6" ng-if="question.optionchoosen != 0">
+                    <h4>{{'Attempted Answer' | translate}}</h4>
+                    <div id="shuffle_{{question.questionid}}" class="ui-draggable-handle Display-Options width-full" ng-repeat="opt in question.optiontexts"
+                         ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                        <label class="ver-align-m">{{opt}}</label>
+                    </div>  
+                </div>
+
+            </div>
+            <!--above code for drag and drop-->
+
+            <div class="col-md-12" ng-if="question.questiontype == 'MTF'" ng-show="question.open">
+                <div class="col-md-8 p-b-10">
+                    <h4>{{'Correct Answer' | translate}}</h4>
+                    <div class="row">
+                        <!--in ng-init init function declared in controller is called to display the splitted question text-->
+                        <div class="col-md-6">
+                            <div class="mtf-left Display-Question p-t-0 p-b-5">
+                                <div class="ui-draggable-handle Display-Options width-full" ng-repeat="txt in question.OptTxt">
+                                    <label class="ver-align-m p_height">{{txt.OptTxt}}</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6" ng-init="entities=init(question.questiontext)">
+                            <div class="ui-draggable-handle Display-Options width-full p-t-0 p-b-5 match correctanswer" ng-repeat="option in question.options">
+                                <label class="ver-align-m p_height">{{option.optiontext}}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mtf-left" ng-if="question.optionchoosen != 0">
+                    <h4 class="">{{'Attempted Answer' | translate}}</h4>
+                    <div id="shuffle_{{question.questionid}}" class="ui-draggable-handle Display-Options width-full p-t-0 p-b-5"
+                         ng-repeat="optionchoosen in question.optiontexts" ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                        <label class="ver-align-m p_height">{{optionchoosen}}</label>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="col-md-6" ng-if="question.questiontype == 'FIB'" ng-show="question.open">
+                <div ng-repeat="option in question.options" class="Display-Options"
+                     ng-class="{'userchoosen': question.optionchoosen==option.answerid , 'correctanswer': option.Iscorrect== 1}">
+                    <p>{{option.optiontext}}</p>
+                </div>
+            </div>
+
+            <div class="clearfix" ng-if="question.questiontype == 'FIB2'" ng-show="question.open">
+                <div class="col-md-6">
+                    <h4>{{'Correct Answer' | translate}}</h4>
+                    <div ng-repeat="option in question.options" class="Display-Options"
+                         ng-class="{'correctanswer': option.Iscorrect== 1}">
+                        <p>{{option.optiontext}}</p>
+                    </div>
+                </div>
+                <div class="col-md-6" ng-if="question.optionchoosen != 0">
+                    <h4>{{'Attempted Answer' | translate}}</h4>
+                    <div ng-repeat="optionchoosen in question.optiontexts" class="Display-Options"
+                         ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                        <p>{{optionchoosen}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6" ng-if="question.questiontype == 'MCQ'" ng-show="question.open">
+                <div ng-repeat="option in question.options" class="Display-Options"
+                     ng-class="{'userchoosen': question.optionchoosen==option.answerid , 'correctanswer': option.Iscorrect== 1}">
+                    <p>{{option.optiontext}}</p>
+                </div>
+            </div>
+
+            <div class="col-md-6" ng-if="question.questiontype == 'TOF'" ng-show="question.open">
+                <div ng-repeat="option in question.options" class="Display-Options"
+                     ng-class="{'userchoosen': question.optionchoosen==option.answerid , 'correctanswer': option.Iscorrect== 1}">
+                    <p>{{option.optiontext}}</p>
+                </div>
+            </div>
+
+            <div class="col-md-12" ng-if="question.questiontype == 'MSQ'" ng-show="question.open">
+                <div class="col-md-6">
+                    <h4>{{'Correct Answer' | translate}}</h4>
+                    <div ng-repeat="option in question.options" class="Display-Options"
+                         ng-class="{'correctanswer': option.Iscorrect== 1}">
+                        <p>{{option.optiontext}}</p>
+                    </div>
+                </div>
+                <div class="col-md-6" ng-if="question.optionchoosen != 0">
+                    <h4>{{'Attempted Answer' | translate}}</h4>
+                    <div ng-repeat="optionchoosen in question.optiontexts track by $index" class="Display-Options"
+                         ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                        <p>{{optionchoosen}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-if="question.questiontype == 'ETQ'" ng-show="question.open">
+                <div class="col-md-6">
+                    <h4>{{'Correct Answer' | translate}}</h4>
+                    <div ng-repeat="option in question.options" class="Display-Options"
+                         ng-class="{'correctanswer': option.Iscorrect== 1}">
+                        <p>{{option.optiontext}}</p>
+                    </div>
+                </div>
+                <div class="col-md-6" ng-if="question.optionchoosen != 0">
+                    <h4>{{'Attempted Answer' | translate}}</h4>
+                    <div ng-repeat="optionchoosen in question.optiontexts track by $index" class="Display-Options"
+                         ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                        <p>
+                            {{optionchoosen}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+                    <div class="col-sm-12">
+                        <div class="pabel-body">
+                            <h4>Submitted Answer</h4>
+                            <div id="sentences" ng-repeat="optionchoosen in question.optiontexts track by $index" class="Display-Options"
+                                 ng-class="{'userchoosen': question.isOptionCorrect[$index] == 0 , 'correctanswer': question.isOptionCorrect[$index] == 1}">
+                                <!--<div ng-bind-html="optionchoosen"></div>-->
+                                <p ng-bind-html="optionchoosen">
+
+                                </p>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="">
+                        <div class="col-md-6">
+                            <h4>Actual Keywords:</h4>
+
+                            <div id="keywords_{{option.answerid}}" ng-repeat="option in question.options" class="Display-Options" ng-click="highlight(question,option.optiontext,option.answerid)"
+                                 ng-class="{'correctanswer': option.Iscorrect== 1 }">
+
+                                <!--<span class="" id="key_{{option.answerid}}"> keyword not present </span>-->
+                                <p>{{option.optiontext}}</p>
+                                <!--<div>
+                                    <span class="userchoosen" id="keynotfound_{{option.answerid}}">>
+                                        <i class="fa fa-fw fa-times" aria-hidden="true"></i> Keyword is not present
+                                    </span>
+                                </div>-->
+                            </div>
+
+                        </div>
+                        <div class="col-md-6" ng-if="question.optionchoosen != 0">
+
+                            <div>
+                                <h4>Submitted Keyword:</h4>
+                                <div ng-repeat="val in question.valnotexists" class="Display-Options"
+                                     ng-class="{'userchoosen': val.isCorrect == 0 , 'correctanswer': val.isCorrect == 1}">
+                                    <p> {{ val.option }}</p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                    <!--<div class="col-md-6" >
+                    <h4>Keyword Not exists:</h4>
+                    <div  ng-repeat="val in notexistsvalue" class="Display-Options userchoosen" ng-if="ansid==ansidval">-->
+                    <!--<div ng-bind-html="optionchoosen"></div>-->
+                    <!--<div class='col-md-3 clearfix p-r-0' id="wrongkeys_{{option.answerid}}">      </div>-->
+                    <!--<p>
+                                {{val}}
+                            </p>
+                        </div>
+                    </div>-->
+                </div>
+                <div class="col-md-12 m-t-15" ng-if="question.questiontype == 'Comprehension'" ng-show="question.open">
+                    <div class="comprehension quiz-text">
+                        <div class="clearfix f-s-14">
+                            <div class="img-video m-b-30">
+                                <video class="center-block" ng-if="question.questiontext=='video'" controls="controls" ng-repeat="c in CompVideo" onclick="this.paused ? this.play() : this.pause(); " width="600" height="300">
+                                    <source ng-if="question.questionid == c.questionId" ng-src="{{c.VideoPath | trusted }}" type="video/mp4" />
+                                </video>
+                                <embed ng-if="question.questiontext=='URL'" src="{{c.VideoPath | trusted }}" ng-repeat="c in CompVideo" class="center-block" frameborder="0" autoplay="0" width="700" height="400" />
+                            </div>
+                            <div ng-if="question.questiontext=='image'" id="CompImg"><img id="questionimage" class="center-block" ng-src="{{imgurl}}Contents/Questions/ImageQuestion/{{question.questionid}}.png" /></div>
+                        </div>
+                    </div>
+                    <div ng-include="'App/Quiz/Result/Comprehension_ReviewAnswer.html'" ng-init="comprehensionid = question.questionid;default=default;"></div>
+                </div>
+
+
+        </div>
+        <!--End of Question Display Section-->
+
+    </div><!--/.panel-body .QuestionPane-->
+    <div class="panel-bottom-btns m-b-15 clearfix">
+        <button class="btn btn_dblue btn-small pull-left" ng-click="BackToResult()">
+            <i class="fa fa-arrow-left"></i>&nbsp;{{'Back' | translate}}
+        </button>
+    </div>
+
+</div><!--/.quiz-result-->
+<script type="text/javascript">
+    //BEGIN ACCORDION WITH ICONS
+    function toggleChevron(e) {
+        $(e.target)
+            .prev('.panel-heading')
+            .find("i.indicator")
+            .toggleClass('fa-chevron-up fa-chevron-down');
+    }
+    $('.quiz-result').on('hidden.bs.collapse', toggleChevron);
+    $('.quiz-result').on('shown.bs.collapse', toggleChevron);
+    //END ACCORDION WITH ICONS
+</script>
