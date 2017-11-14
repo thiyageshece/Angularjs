@@ -1,0 +1,7 @@
+<!--4.11.2017--!>
+1. CR#4674: Language translation from english to tamil done for chat, message, notification, quiz, supervisor(approve) modules and question types(handson,sql).
+2. CR#4674: Conflict occured in Number_Analysis.html, resolved conflicts.
+3. CR#4674: Language translation from english to tamil done for Allsearch,AddQuestionBank,Qustion Bank list, Assign Quiz , LP Compliance, LPGroupComplaince and My teams.
+
+<!--6.11.2017--!>
+1. CR#4674: Created words for english to tamil  in ta.json file
